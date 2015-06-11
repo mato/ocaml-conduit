@@ -162,8 +162,13 @@ sed \
 
 if [ "$1" = "true" ]; then
   B=_build/lib/
-  ls $B/*.cmi $B/*.cmt $B/*.cmti $B/*.cmx $B/*.cmxa $B/*.cma $B/*.cmxs $B/*.a $B/*.o $B/*.cmo > _install/lib
+  if [ -n "${SHARED_LIBS}" ]; then
+    CMXS="$B/*.cmxs"
+  else
+    CMXS=
+  fi
+  ls $B/*.cmi $B/*.cmt $B/*.cmti $B/*.cmx $B/*.cmxa $B/*.cma $CMXS $B/*.a $B/*.o $B/*.cmo > _install/lib
   ocamlfind remove conduit || true
-  FILES=`ls -1 lib/intro.html $B/*.mli $B/*.cmi $B/*.cmt $B/*.cmti $B/*.cmx $B/*.cmxa $B/*.cma $B/*.cmxs $B/*.a $B/*.o $B/*.cmo 2>/dev/null || true`
+  FILES=`ls -1 lib/intro.html $B/*.mli $B/*.cmi $B/*.cmt $B/*.cmti $B/*.cmx $B/*.cmxa $B/*.cma $CMXS $B/*.a $B/*.o $B/*.cmo 2>/dev/null || true`
   ocamlfind install conduit META $FILES
 fi
