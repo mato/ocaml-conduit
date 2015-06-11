@@ -6,6 +6,14 @@ J_FLAG=2
 BASE_PKG="sexplib ipaddr cstruct uri stringext"
 SYNTAX_PKG="camlp4.macro sexplib.syntax"
 
+# When cross-compiling, assume for now that shared libraries are not
+# supported.
+if [ -n "${OCAMLFIND_TOOLCHAIN}" ]; then
+  SHARED_LIBS=
+else
+  SHARED_LIBS=yes
+fi
+
 # The Async backend is only supported in OCaml 4.01.0+
 OCAML_VERSION=`ocamlc -version`
 case $OCAML_VERSION in
@@ -27,7 +35,10 @@ HAVE_VCHAN=`ocamlfind query vchan 2>/dev/null || true`
 HAVE_VCHAN_LWT=`ocamlfind query vchan.lwt xen-evtchn.unix 2>/dev/null || true`
 
 add_target () {
-  TARGETS="$TARGETS lib/$1.cmxs lib/$1.cma lib/$1.cmxa"
+  TARGETS="$TARGETS lib/$1.cma lib/$1.cmxa"
+  if [ -n "${SHARED_LIBS}" ]; then
+    TARGETS="$TARGETS lib/$1.cmxs"
+  fi
 }
 
 add_pkg () {
@@ -132,6 +143,8 @@ fi
 
 REQS=`echo $PKG $ASYNC_REQUIRES $LWT_REQUIRES $LWT_UNIX_REQUIRES $MIRAGE_REQUIRES $VCHAN_LWT_REQUIRES  | tr -s ' '`
 
+# When cross-compiling, build myocamlbuild using the host compiler.
+(unset OCAMLFIND_TOOLCHAIN; ocamlbuild -use-ocamlfind -just-plugin)
 ocamlbuild -use-ocamlfind -classic-display -no-links -j ${J_FLAG} -tag ${TAGS} \
   -cflags "-w A-4-33-40-41-42-43-34-44" \
   -pkgs `echo $REQS | tr ' ' ','` \
